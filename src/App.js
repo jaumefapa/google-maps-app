@@ -1,24 +1,24 @@
-import logo from './logo.svg';
+import { Marker } from '@react-google-maps/api';
+import { useSelector } from 'react-redux';
+import { selectCurrentMarker } from './redux/markerSlice';
+import InputPlacesAutocomplete from './components/InputPlacesAutocomplete';
+import MapComponent from './components/MapComponent'
 import './App.css';
 
 function App() {
+  const marker = useSelector(selectCurrentMarker);
+
+  const center = marker ? marker : { lat: 41.3873974, lng: 2.168568 }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <div className='searchBar'>
+        <InputPlacesAutocomplete />
+      </div>
+      <MapComponent center={center} >
+        {marker && <Marker position={marker} />}
+      </MapComponent>
+    </>
   );
 }
 

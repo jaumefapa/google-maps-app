@@ -1,70 +1,118 @@
-# Getting Started with Create React App
+### Exercice 1:
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Given code:
 
-## Available Scripts
+```js
+class RegisteredUser {
 
-In the project directory, you can run:
+    constructor(services = []) {
+        this.services = services;
+    }
 
-### `npm start`
+    getTotal () {
+        let total = 0;
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+        this.services.forEach(service, index => {
+            let multimediaContent = service.getMultimediaContent ();
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+            if (typeof service == StreamingService) {
+                total += multimediaContent.streamingPrice;
+            } else if (typeof service == DownloadService) {
+                total += multimediaContent.downloadPrice;
+            }
 
-### `npm test`
+            if (typeof multimediaContent == PremiumContent) {
+                total += multimediaContent.additionalFee;
+            }
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+        })
 
-### `npm run build`
+        return total;
+    }
+}
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+ASSUMPTIONS:
+- The main idea I got, is that we want to know how much a given user has to pay for the Services he/she has consumed. Sort of a 'purchase history'.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Possible issues:
+1. What happens if in the future the MultimediaContent price changes?
+2. getTotal() gives you the total of which time period? Current month? All time?
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+To solve the price issue we would have to record the price, at that time, each time a service is consumed. Kind of a 'purchase history'. For that we would need a new method.
 
-### `npm run eject`
+This way, each Service should have a pricePaid and this could get as complex as we need it, ie. pricePaid breakdown into premium fee, currency, discounts applied, etc. For the sake of simplicity I will keep it to just pricePaid being a float number.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+So a Service would look like this:
+```
+Service
+- purchaseDate: Timestamp
+- pricePaid: float
+- serviceType: 'streaming' | 'download' | any_other_future_type
++ getMultimediaContent(): MultimediaContent
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+IMPORTANT: Each time a Service would be consumed, we would have to set the pricePaid. We would need a method for that. This method would check the serviceType, if it's PremiumContent and then set the pricePaid.
+We would also have to set the serviceType with another method.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+```js
+import serviceTypes from '@/globals'
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+class RegisteredUser {
 
-## Learn More
+    constructor(services = []) {
+        this.services = services;
+    }
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+    getTotal () {
+        // If method was enhanced to support a time period.
+        // Then we would filter by service.purchaseDate
+        let total = 0;
+        this.services.forEach(service => total += this.pricePaid)
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+        return total;
+    }
 
-### Code Splitting
+    setPricePaid () {
+        if (this.pricePaid) return
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+        if (this.serviceType === serviceTypes.STREAMING) {
+            this.pricePaid = multimediaContent.streamingPrice;
+        }
 
-### Analyzing the Bundle Size
+        if (this.serviceType === serviceTypes.DOWNLOAD) {
+            this.pricePaid = multimediaContent.downloadPrice;
+        }
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+        if (multimediaContent.PremiumContent) {
+                this.pricePaid += multimediaContent.additionalFee;
+            }
 
-### Making a Progressive Web App
+        return
+    }
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+}
+```
 
-### Advanced Configuration
+### Exercice 2:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+#### Setup:
+- Create .env.local file in the root folder
+- Add REACT_APP_GOOGLE_MAPS_API_KEY="HERE GOES YOUR GOOGLE MAPS API KEY"
+- Run `npm install`
+- Run `npm run start`
 
-### Deployment
+#### Comments:
+1. Test have been added only for the <BoldText /> component. Which highlights in bold the text pieces of a provided text that match a given criteria.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+2. To make the map App more efficient and cheap the following has been applied:
+- Request less information for Places (main and secondText) 
+- Debounce request in autocomplete to 500ms
+- Cache results for 1h
+- No use index files to import and export all the components
+- Used React.memo() for MapComponent
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+3. Further things that could be done:
+- Narrow down autocomplete request by user's location or similar
+- Analyze performance with React devtool Profiler
+- Don't make use of npm packages and develop specific ones
